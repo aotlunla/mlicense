@@ -1,0 +1,44 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model License {
+  id          String           @id @default(uuid())
+  key         String           @unique
+  maxSites    Int              @default(1)
+  validFrom   DateTime
+  validUntil  DateTime
+  isActive    Boolean          @default(true)
+  sites       RegisteredSite[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model RegisteredSite {
+  id           String   @id @default(uuid())
+  url          String
+  licenseId    String
+  license      License  @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  registeredAt DateTime @default(now())
+  lastCheckedAt DateTime @default(now())
+
+  @@unique([licenseId, url])
+}
+
+model Admin {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model SystemConfig {
+  id           String   @id @default("default")
+  contactUrl   String   @default("mailto:support@example.com")
+  updatedAt    DateTime @updatedAt
+}
