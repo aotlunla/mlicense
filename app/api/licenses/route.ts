@@ -13,7 +13,7 @@ export async function GET() {
       orderBy: { createdAt: 'desc' },
     });
     return NextResponse.json(licenses);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch licenses' }, { status: 500 });
   }
 }
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(license);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to create license' }, { status: 500 });
   }
 }

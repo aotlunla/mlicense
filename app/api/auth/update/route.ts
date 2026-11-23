@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-import { cookies } from 'next/headers';
 
 export async function PUT(req: Request) {
     try {
@@ -20,7 +19,7 @@ export async function PUT(req: Request) {
             return NextResponse.json({ error: 'Admin not found' }, { status: 404 });
         }
 
-        const data: any = {};
+        const data: { username?: string; passwordHash?: string } = {};
         if (username) data.username = username;
         if (password) {
             data.passwordHash = await bcrypt.hash(password, 10);

@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     try {
         const urlObj = new URL(normalizedUrl);
         normalizedUrl = urlObj.origin;
-    } catch (e) {
+    } catch {
         console.warn('Invalid URL provided, using as-is:', normalizedUrl);
     }
 
@@ -108,7 +108,7 @@ export async function POST(req: Request) {
     }
 }
 
-export async function OPTIONS(request: Request) {
+export async function OPTIONS() {
     return cors(
         new NextResponse(null, {
             status: 204,

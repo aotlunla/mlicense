@@ -5,7 +5,7 @@ import { jwtVerify } from 'jose';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-change-this';
 
-async function verifyAuth(req: Request) {
+async function verifyAuth() {
     const cookieStore = await cookies();
     const token = cookieStore.get('admin_token')?.value;
     if (!token) return false;
@@ -27,13 +27,13 @@ export async function GET() {
             });
         }
         return NextResponse.json(config);
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
     }
 }
 
 export async function PUT(req: Request) {
-    if (!(await verifyAuth(req))) {
+    if (!(await verifyAuth())) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -48,7 +48,7 @@ export async function PUT(req: Request) {
         });
 
         return NextResponse.json(config);
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to update settings' }, { status: 500 });
     }
 }

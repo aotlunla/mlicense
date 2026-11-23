@@ -22,6 +22,7 @@ export async function GET(req: Request) {
 
     const script = `
 (function () {
+    console.log('[MLicense] Script loaded');
     const API_URL = '${apiUrl}';
     const CONTACT_URL = '${contactUrl}';
     const LOCAL_STORAGE_KEY = 'mlicense_key_override';
@@ -305,6 +306,7 @@ export async function GET(req: Request) {
             'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
             'Pragma': 'no-cache',
             'Expires': '0',
+            'Access-Control-Allow-Origin': '*',
         },
     });
 }

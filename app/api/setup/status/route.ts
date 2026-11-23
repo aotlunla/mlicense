@@ -5,7 +5,7 @@ export async function GET() {
     try {
         const count = await prisma.admin.count();
         return NextResponse.json({ installed: count > 0 });
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to check installation status' }, { status: 500 });
     }
 }

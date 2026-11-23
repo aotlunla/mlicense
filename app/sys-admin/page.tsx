@@ -1,9 +1,24 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Search, Globe, Key, Shield, LogOut, CheckCircle, XCircle, Code, Trash2, Edit2, Eye, X, Settings } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Plus, Search, Globe, Key, Shield, LogOut, CheckCircle, XCircle, Code, Trash2, Edit2, Eye, Settings } from 'lucide-react';
 import Link from 'next/link';
+import { ModeToggle } from "@/components/mode-toggle";
+
+// Shadcn Imports
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+
 
 type RegisteredSite = {
     id: string;
@@ -26,26 +41,49 @@ type License = {
 
 const AdminNavbar = ({ onOpenSettings }: { onOpenSettings: () => void }) => {
     return (
-        <nav className="fixed w-full z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
+        <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
-                    <div className="flex items-center">
-                        <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                            oatedit
+                    <div className="flex items-center gap-2">
+                        <Link href="/" className="text-xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+                            MLicense
                         </Link>
-                        <span className="ml-2 px-2 py-0.5 rounded text-xs bg-blue-50 text-blue-600 font-medium border border-blue-100">Admin</span>
+                        <Badge variant="secondary" className="text-xs">Admin</Badge>
                     </div>
                     <div className="flex items-center space-x-4">
-                        <button onClick={onOpenSettings} className="flex items-center text-gray-500 hover:text-blue-600 transition-colors text-sm font-medium">
-                            <Settings className="w-4 h-4 mr-2" />
-                            Settings
-                        </button>
-                        <button onClick={() => {
-                            fetch('/api/auth/logout', { method: 'POST' }).then(() => window.location.href = '/sys-login');
-                        }} className="flex items-center text-gray-500 hover:text-red-600 transition-colors text-sm font-medium">
-                            <LogOut className="w-4 h-4 mr-2" />
-                            Logout
-                        </button>
+                        <ModeToggle />
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                                    <Avatar className="h-8 w-8">
+                                        <AvatarImage src="/avatars/01.png" alt="@admin" />
+                                        <AvatarFallback>AD</AvatarFallback>
+                                    </Avatar>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-56" align="end" forceMount>
+                                <DropdownMenuLabel className="font-normal">
+                                    <div className="flex flex-col space-y-1">
+                                        <p className="text-sm font-medium leading-none">Admin</p>
+                                        <p className="text-xs leading-none text-muted-foreground">
+                                            System Administrator
+                                        </p>
+                                    </div>
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={onOpenSettings} className="cursor-pointer">
+                                    <Settings className="mr-2 h-4 w-4" />
+                                    <span>Settings</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => {
+                                    fetch('/api/auth/logout', { method: 'POST' }).then(() => window.location.href = '/sys-login');
+                                }} className="cursor-pointer text-destructive focus:text-destructive">
+                                    <LogOut className="mr-2 h-4 w-4" />
+                                    <span>Log out</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                 </div>
             </div>
@@ -268,14 +306,14 @@ export default function AdminPage() {
     const filteredLicenses = licenses.filter(l => l.key.toLowerCase().includes(searchTerm.toLowerCase()));
 
     return (
-        <div className="min-h-screen bg-[#f8f9fa] text-gray-900 font-sans selection:bg-blue-100 selection:text-blue-700">
+        <div className="min-h-screen bg-background text-foreground font-sans">
             <AdminNavbar onOpenSettings={() => setIsSettingsOpen(true)} />
 
             <div className="relative pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
                 {/* Background Blobs */}
                 <div className="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
-                    <div className="absolute top-[10%] left-[20%] w-[40%] h-[40%] bg-blue-100/50 rounded-full blur-[100px]" />
-                    <div className="absolute bottom-[20%] right-[10%] w-[30%] h-[30%] bg-purple-100/50 rounded-full blur-[100px]" />
+                    <div className="absolute top-[10%] left-[20%] w-[40%] h-[40%] bg-blue-100/50 dark:bg-blue-900/20 rounded-full blur-[100px]" />
+                    <div className="absolute bottom-[20%] right-[10%] w-[30%] h-[30%] bg-purple-100/50 dark:bg-purple-900/20 rounded-full blur-[100px]" />
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -285,16 +323,23 @@ export default function AdminPage() {
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm"
                         >
-                            <div className="flex items-center mb-4 text-blue-600">
-                                <Code className="w-5 h-5 mr-2" />
-                                <h2 className="text-lg font-semibold text-gray-900">Integration</h2>
-                            </div>
-                            <p className="text-sm text-gray-500 mb-4">Add this snippet to your client&apos;s website &lt;head&gt;.</p>
-                            <div className="bg-gray-50 p-3 rounded-lg border border-gray-200 font-mono text-xs text-gray-600 overflow-x-auto whitespace-nowrap">
-                                &lt;script src=&quot;{origin}/license.js&quot; data-key=&quot;LICENSE_KEY&quot;&gt;&lt;/script&gt;
-                            </div>
+                            <Card>
+                                <CardHeader className="pb-3">
+                                    <CardTitle className="flex items-center text-primary text-lg">
+                                        <Code className="w-5 h-5 mr-2" />
+                                        Integration
+                                    </CardTitle>
+                                    <CardDescription>
+                                        Add this snippet to your client&apos;s website &lt;head&gt;.
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="bg-muted p-3 rounded-lg border font-mono text-xs text-muted-foreground overflow-x-auto whitespace-nowrap">
+                                        &lt;script src=&quot;{origin}/license.js&quot; data-key=&quot;LICENSE_KEY&quot;&gt;&lt;/script&gt;
+                                    </div>
+                                </CardContent>
+                            </Card>
                         </motion.div>
 
                         {/* Create Form */}
@@ -302,83 +347,81 @@ export default function AdminPage() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 }}
-                            className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm"
                         >
-                            <div className="flex items-center mb-6 text-purple-600">
-                                <Plus className="w-5 h-5 mr-2" />
-                                <h2 className="text-lg font-semibold text-gray-900">New License</h2>
-                            </div>
-
-                            <form onSubmit={handleCreate} className="space-y-4">
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-500 mb-1">License Key</label>
-                                    <div className="flex gap-2">
-                                        <div className="relative flex-1">
-                                            <input
-                                                type="text"
-                                                value={formData.key}
-                                                onChange={(e) => setFormData({ ...formData, key: e.target.value })}
-                                                className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-gray-900 placeholder-gray-400 text-sm"
-                                                placeholder="XXXX-XXXX-XXXX-XXXX"
-                                                required
-                                            />
-                                            <Key className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center text-primary text-lg">
+                                        <Plus className="w-5 h-5 mr-2" />
+                                        New License
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <form onSubmit={handleCreate} className="space-y-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="licenseKey">License Key</Label>
+                                            <div className="flex gap-2">
+                                                <div className="relative flex-1">
+                                                    <Key className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                    <Input
+                                                        id="licenseKey"
+                                                        value={formData.key}
+                                                        onChange={(e) => setFormData({ ...formData, key: e.target.value })}
+                                                        className="pl-9"
+                                                        placeholder="XXXX-XXXX-XXXX-XXXX"
+                                                        required
+                                                    />
+                                                </div>
+                                                <Button type="button" variant="outline" onClick={generateKey}>
+                                                    Gen
+                                                </Button>
+                                            </div>
                                         </div>
-                                        <button
-                                            type="button"
-                                            onClick={generateKey}
-                                            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-lg text-gray-600 text-xs transition-colors font-medium"
-                                        >
-                                            Gen
-                                        </button>
-                                    </div>
-                                </div>
 
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-500 mb-1">Max Sites</label>
-                                    <div className="relative">
-                                        <input
-                                            type="number"
-                                            value={formData.maxSites}
-                                            onChange={(e) => setFormData({ ...formData, maxSites: parseInt(e.target.value) })}
-                                            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-gray-900 text-sm"
-                                            min="1"
-                                            required
-                                        />
-                                        <Globe className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                                    </div>
-                                </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="maxSites">Max Sites</Label>
+                                            <div className="relative">
+                                                <Globe className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                <Input
+                                                    id="maxSites"
+                                                    type="number"
+                                                    value={formData.maxSites}
+                                                    onChange={(e) => setFormData({ ...formData, maxSites: parseInt(e.target.value) })}
+                                                    className="pl-9"
+                                                    min="1"
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-medium text-gray-500 mb-1">Valid From</label>
-                                        <input
-                                            type="date"
-                                            value={formData.validFrom}
-                                            onChange={(e) => setFormData({ ...formData, validFrom: e.target.value })}
-                                            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-gray-900 text-xs"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-medium text-gray-500 mb-1">Valid Until</label>
-                                        <input
-                                            type="date"
-                                            value={formData.validUntil}
-                                            onChange={(e) => setFormData({ ...formData, validUntil: e.target.value })}
-                                            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-gray-900 text-xs"
-                                            required
-                                        />
-                                    </div>
-                                </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="validFrom">Valid From</Label>
+                                                <Input
+                                                    id="validFrom"
+                                                    type="date"
+                                                    value={formData.validFrom}
+                                                    onChange={(e) => setFormData({ ...formData, validFrom: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="validUntil">Valid Until</Label>
+                                                <Input
+                                                    id="validUntil"
+                                                    type="date"
+                                                    value={formData.validUntil}
+                                                    onChange={(e) => setFormData({ ...formData, validUntil: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
 
-                                <button
-                                    type="submit"
-                                    className="w-full py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg font-medium text-white shadow-lg shadow-blue-500/20 hover:opacity-90 transition-opacity mt-4"
-                                >
-                                    Create License
-                                </button>
-                            </form>
+                                        <Button type="submit" className="w-full bg-gradient-to-r from-primary to-blue-600 hover:opacity-90 transition-opacity">
+                                            Create License
+                                        </Button>
+                                    </form>
+                                </CardContent>
+                            </Card>
                         </motion.div>
                     </div>
 
@@ -388,329 +431,288 @@ export default function AdminPage() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 }}
-                            className="rounded-2xl bg-white border border-gray-200 shadow-sm overflow-hidden flex flex-col h-full"
                         >
-                            <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                <div className="flex items-center text-gray-900">
-                                    <Shield className="w-5 h-5 mr-3 text-green-600" />
-                                    <h2 className="text-lg font-semibold">Active Licenses</h2>
-                                    <span className="ml-3 px-2 py-0.5 rounded-full bg-gray-100 text-xs text-gray-600 font-medium">
-                                        {licenses.length}
-                                    </span>
-                                </div>
-                                <div className="relative">
-                                    <input
-                                        type="text"
-                                        placeholder="Search keys..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="pl-9 pr-4 py-1.5 bg-gray-50 border border-gray-200 rounded-full text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 w-full sm:w-64 transition-all"
-                                    />
-                                    <Search className="absolute left-3 top-2 w-3.5 h-3.5 text-gray-400" />
-                                </div>
-                            </div>
-
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr className="border-b border-gray-100 text-gray-500 text-xs uppercase tracking-wider bg-gray-50/50">
-                                            <th className="p-4 font-medium">License Key</th>
-                                            <th className="p-4 font-medium">Usage</th>
-                                            <th className="p-4 font-medium hidden md:table-cell">Validity</th>
-                                            <th className="p-4 font-medium text-center">Status</th>
-                                            <th className="p-4 font-medium text-right">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100">
-                                        {loading ? (
-                                            <tr><td colSpan={5} className="p-8 text-center text-gray-500">Loading licenses...</td></tr>
-                                        ) : filteredLicenses.length === 0 ? (
-                                            <tr><td colSpan={5} className="p-8 text-center text-gray-500">No licenses found.</td></tr>
-                                        ) : (
-                                            filteredLicenses.map((license) => (
-                                                <tr key={license.id} className="group hover:bg-gray-50 transition-colors">
-                                                    <td className="p-4">
-                                                        <div className="flex items-center">
-                                                            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center mr-3 text-blue-600 group-hover:bg-blue-100 transition-colors">
-                                                                <Key className="w-4 h-4" />
-                                                            </div>
-                                                            <span className="font-mono text-sm text-gray-700 font-medium">{license.key}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-4">
-                                                        <div className="flex items-center text-sm text-gray-500">
-                                                            <Globe className="w-4 h-4 mr-2 text-gray-400" />
-                                                            <span className={license._count.sites >= license.maxSites ? 'text-orange-600 font-medium' : ''}>
-                                                                {license._count.sites} / {license.maxSites}
-                                                            </span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-4 hidden md:table-cell">
-                                                        <div className="text-xs text-gray-500 space-y-1">
-                                                            <div className="flex items-center">
-                                                                <span className="w-12 text-gray-400">From:</span>
-                                                                <span>{new Date(license.validFrom).toLocaleDateString()}</span>
-                                                            </div>
-                                                            <div className="flex items-center">
-                                                                <span className="w-12 text-gray-400">Until:</span>
-                                                                <span>{new Date(license.validUntil).toLocaleDateString()}</span>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-4 text-center">
-                                                        {license.isActive ? (
-                                                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-600 border border-green-200">
-                                                                <CheckCircle className="w-3 h-3 mr-1.5" /> Active
-                                                            </span>
-                                                        ) : (
-                                                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-600 border border-red-200">
-                                                                <XCircle className="w-3 h-3 mr-1.5" /> Inactive
-                                                            </span>
-                                                        )}
-                                                    </td>
-                                                    <td className="p-4 text-right">
-                                                        <div className="flex items-center justify-end space-x-2">
-                                                            <button
-                                                                onClick={() => openSites(license)}
-                                                                className="p-1.5 rounded-lg bg-gray-100 hover:bg-blue-50 hover:text-blue-600 text-gray-500 transition-colors"
-                                                                title="View Sites"
-                                                            >
-                                                                <Eye className="w-4 h-4" />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => openEdit(license)}
-                                                                className="p-1.5 rounded-lg bg-gray-100 hover:bg-yellow-50 hover:text-yellow-600 text-gray-500 transition-colors"
-                                                                title="Edit License"
-                                                            >
-                                                                <Edit2 className="w-4 h-4" />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDelete(license.id)}
-                                                                className="p-1.5 rounded-lg bg-gray-100 hover:bg-red-50 hover:text-red-600 text-gray-500 transition-colors"
-                                                                title="Delete License"
-                                                            >
-                                                                <Trash2 className="w-4 h-4" />
-                                                            </button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
+                            <Card className="h-full flex flex-col">
+                                <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0 pb-6">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-green-100/50 rounded-lg">
+                                            <Shield className="w-5 h-5 text-green-700" />
+                                        </div>
+                                        <div>
+                                            <CardTitle className="text-lg font-bold">Active Licenses</CardTitle>
+                                            <CardDescription>Manage your system licenses</CardDescription>
+                                        </div>
+                                        <Badge variant="secondary" className="ml-2">
+                                            {licenses.length}
+                                        </Badge>
+                                    </div>
+                                    <div className="relative w-full sm:w-64">
+                                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            placeholder="Search keys..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            className="pl-9"
+                                        />
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="p-0 flex-1">
+                                    <div className="overflow-x-auto">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow className="bg-muted/50">
+                                                    <TableHead className="w-[200px]">License Key</TableHead>
+                                                    <TableHead>Usage</TableHead>
+                                                    <TableHead className="hidden md:table-cell">Validity</TableHead>
+                                                    <TableHead className="text-center">Status</TableHead>
+                                                    <TableHead className="text-right">Actions</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {loading ? (
+                                                    <TableRow>
+                                                        <TableCell colSpan={5} className="h-24 text-center">
+                                                            Loading licenses...
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ) : filteredLicenses.length === 0 ? (
+                                                    <TableRow>
+                                                        <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                                                            No licenses found.
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ) : (
+                                                    filteredLicenses.map((license) => (
+                                                        <TableRow key={license.id}>
+                                                            <TableCell className="font-mono font-medium">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="p-1.5 bg-primary/10 rounded text-primary">
+                                                                        <Key className="w-3.5 h-3.5" />
+                                                                    </div>
+                                                                    {license.key}
+                                                                </div>
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <div className="flex items-center gap-2">
+                                                                    <Globe className="w-4 h-4 text-muted-foreground" />
+                                                                    <span className={license._count.sites >= license.maxSites ? 'text-destructive font-bold' : ''}>
+                                                                        {license._count.sites} / {license.maxSites}
+                                                                    </span>
+                                                                </div>
+                                                            </TableCell>
+                                                            <TableCell className="hidden md:table-cell">
+                                                                <div className="text-xs space-y-1 text-muted-foreground">
+                                                                    <div className="flex justify-between gap-4">
+                                                                        <span>From:</span>
+                                                                        <span className="font-medium text-foreground">{new Date(license.validFrom).toLocaleDateString()}</span>
+                                                                    </div>
+                                                                    <div className="flex justify-between gap-4">
+                                                                        <span>Until:</span>
+                                                                        <span className="font-medium text-foreground">{new Date(license.validUntil).toLocaleDateString()}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </TableCell>
+                                                            <TableCell className="text-center">
+                                                                <Badge variant={license.isActive ? "default" : "destructive"} className={license.isActive ? "bg-green-600 hover:bg-green-700" : ""}>
+                                                                    {license.isActive ? (
+                                                                        <><CheckCircle className="w-3 h-3 mr-1" /> Active</>
+                                                                    ) : (
+                                                                        <><XCircle className="w-3 h-3 mr-1" /> Inactive</>
+                                                                    )}
+                                                                </Badge>
+                                                            </TableCell>
+                                                            <TableCell className="text-right">
+                                                                <div className="flex justify-end gap-1">
+                                                                    <Button variant="ghost" size="icon" onClick={() => openSites(license)} title="View Sites">
+                                                                        <Eye className="w-4 h-4 text-muted-foreground" />
+                                                                    </Button>
+                                                                    <Button variant="ghost" size="icon" onClick={() => openEdit(license)} title="Edit License">
+                                                                        <Edit2 className="w-4 h-4 text-amber-500" />
+                                                                    </Button>
+                                                                    <Button variant="ghost" size="icon" onClick={() => handleDelete(license.id)} title="Delete License">
+                                                                        <Trash2 className="w-4 h-4 text-destructive" />
+                                                                    </Button>
+                                                                </div>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))
+                                                )}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+                                </CardContent>
+                            </Card>
                         </motion.div>
                     </div>
                 </div>
             </div>
 
             {/* Edit Modal */}
-            <AnimatePresence>
-                {isEditOpen && (
-                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="bg-white border border-gray-200 rounded-xl p-6 w-full max-w-md shadow-2xl"
-                        >
-                            <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-xl font-bold text-gray-900">Edit License</h3>
-                                <button onClick={() => setIsEditOpen(false)} className="text-gray-400 hover:text-gray-600">
-                                    <X className="w-6 h-6" />
-                                </button>
-                            </div>
-                            <form onSubmit={handleEditSubmit} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm text-gray-600 mb-1">Max Sites</label>
-                                    <input
-                                        type="number"
-                                        value={editData.maxSites}
-                                        onChange={(e) => setEditData({ ...editData, maxSites: parseInt(e.target.value) })}
-                                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm text-gray-600 mb-1">Valid Until</label>
-                                    <input
-                                        type="date"
-                                        value={editData.validUntil}
-                                        onChange={(e) => setEditData({ ...editData, validUntil: e.target.value })}
-                                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                                    />
-                                </div>
-                                <div className="flex items-center space-x-3">
-                                    <input
-                                        type="checkbox"
-                                        id="isActive"
-                                        checked={editData.isActive}
-                                        onChange={(e) => setEditData({ ...editData, isActive: e.target.checked })}
-                                        className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 bg-white"
-                                    />
-                                    <label htmlFor="isActive" className="text-gray-700">Active License</label>
-                                </div>
-                                <button type="submit" className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
-                                    Save Changes
-                                </button>
-                            </form>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+            <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Edit License</DialogTitle>
+                        <DialogDescription>Update license details and status.</DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleEditSubmit} className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-maxSites">Max Sites</Label>
+                            <Input
+                                id="edit-maxSites"
+                                type="number"
+                                value={editData.maxSites}
+                                onChange={(e) => setEditData({ ...editData, maxSites: parseInt(e.target.value) })}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-validUntil">Valid Until</Label>
+                            <Input
+                                id="edit-validUntil"
+                                type="date"
+                                value={editData.validUntil}
+                                onChange={(e) => setEditData({ ...editData, validUntil: e.target.value })}
+                            />
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <input
+                                type="checkbox"
+                                id="isActive"
+                                checked={editData.isActive}
+                                onChange={(e) => setEditData({ ...editData, isActive: e.target.checked })}
+                                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            />
+                            <Label htmlFor="isActive" className="font-normal cursor-pointer">Active License</Label>
+                        </div>
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => setIsEditOpen(false)}>Cancel</Button>
+                            <Button type="submit">Save Changes</Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
 
             {/* Sites Modal */}
-            <AnimatePresence>
-                {isSitesOpen && selectedLicense && (
-                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="bg-white border border-gray-200 rounded-xl p-6 w-full max-w-2xl shadow-2xl h-[80vh] flex flex-col"
-                        >
-                            <div className="flex justify-between items-center mb-6">
-                                <div>
-                                    <h3 className="text-xl font-bold text-gray-900">Connected Sites</h3>
-                                    <p className="text-sm text-gray-500 font-mono mt-1">{selectedLicense.key}</p>
-                                </div>
-                                <button onClick={() => setIsSitesOpen(false)} className="text-gray-400 hover:text-gray-600">
-                                    <X className="w-6 h-6" />
-                                </button>
+            <Dialog open={isSitesOpen} onOpenChange={setIsSitesOpen}>
+                <DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
+                    <DialogHeader>
+                        <DialogTitle>Connected Sites</DialogTitle>
+                        <DialogDescription className="font-mono">{selectedLicense?.key}</DialogDescription>
+                    </DialogHeader>
+                    <div className="flex-1 overflow-y-auto min-h-[300px]">
+                        {sitesLoading ? (
+                            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mb-4" />
+                                <p>Loading sites...</p>
                             </div>
-
-                            <div className="flex-1 overflow-y-auto pr-2">
-                                {sitesLoading ? (
-                                    <div className="text-center text-gray-500 py-8">Loading sites...</div>
-                                ) : sitesData.length === 0 ? (
-                                    <div className="text-center text-gray-500 py-8">No sites registered yet.</div>
-                                ) : (
-                                    <table className="w-full text-left">
-                                        <thead>
-                                            <tr className="border-b border-gray-200 text-xs text-gray-500 uppercase bg-gray-50/50">
-                                                <th className="pb-3 pl-2 pt-3">URL</th>
-                                                <th className="pb-3 pt-3">Registered</th>
-                                                <th className="pb-3 pt-3 text-center">Last Active</th>
-                                                <th className="pb-3 pt-3 text-right pr-2">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-100">
-                                            {sitesData.map((site) => (
-                                                <tr key={site.id} className="text-sm group hover:bg-gray-50">
-                                                    <td className="py-3 pl-2 text-gray-900 font-medium">{site.url}</td>
-                                                    <td className="py-3 text-gray-500">{new Date(site.registeredAt).toLocaleDateString()}</td>
-                                                    <td className="py-3 text-center text-gray-500">
-                                                        {site.lastCheckedAt ? new Date(site.lastCheckedAt).toLocaleString() : '-'}
-                                                    </td>
-                                                    <td className="py-3 text-right pr-2">
-                                                        <div className="flex items-center justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <button
-                                                                onClick={() => handleUpdateSite(site)}
-                                                                className="p-1.5 rounded-lg bg-gray-100 hover:bg-blue-50 hover:text-blue-600 text-gray-500 transition-colors"
-                                                                title="Edit Site URL"
-                                                            >
-                                                                <Edit2 className="w-3.5 h-3.5" />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteSite(site.id)}
-                                                                className="p-1.5 rounded-lg bg-gray-100 hover:bg-red-50 hover:text-red-600 text-gray-500 transition-colors"
-                                                                title="Remove Site"
-                                                            >
-                                                                <Trash2 className="w-3.5 h-3.5" />
-                                                            </button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                )}
-                            </div>
-                        </motion.div>
+                        ) : sitesData.length === 0 ? (
+                            <div className="text-center py-12 text-muted-foreground">No sites registered yet.</div>
+                        ) : (
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>URL</TableHead>
+                                        <TableHead>Registered</TableHead>
+                                        <TableHead className="text-center">Last Active</TableHead>
+                                        <TableHead className="text-right">Actions</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {sitesData.map((site) => (
+                                        <TableRow key={site.id}>
+                                            <TableCell className="font-medium">{site.url}</TableCell>
+                                            <TableCell className="text-muted-foreground">{new Date(site.registeredAt).toLocaleDateString()}</TableCell>
+                                            <TableCell className="text-center text-muted-foreground">
+                                                {site.lastCheckedAt ? new Date(site.lastCheckedAt).toLocaleString() : '-'}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <div className="flex justify-end gap-2">
+                                                    <Button variant="ghost" size="icon" onClick={() => handleUpdateSite(site)} title="Edit Site URL">
+                                                        <Edit2 className="w-4 h-4" />
+                                                    </Button>
+                                                    <Button variant="ghost" size="icon" onClick={() => handleDeleteSite(site.id)} title="Remove Site">
+                                                        <Trash2 className="w-4 h-4 text-destructive" />
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        )}
                     </div>
-                )}
-            </AnimatePresence>
+                </DialogContent>
+            </Dialog>
             {/* Settings Modal */}
-            <AnimatePresence>
-                {isSettingsOpen && (
-                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="bg-white border border-gray-200 rounded-xl p-6 w-full max-w-lg shadow-2xl max-h-[85vh] overflow-y-auto"
-                        >
-                            <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-xl font-bold text-gray-900">Admin Settings</h3>
-                                <button onClick={() => setIsSettingsOpen(false)} className="text-gray-400 hover:text-gray-600">
-                                    <X className="w-6 h-6" />
-                                </button>
-                            </div>
-                            <form onSubmit={handleUpdateSettings} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm text-gray-600 mb-1">New Username (Optional)</label>
-                                    <input
-                                        type="text"
-                                        value={settingsData.username}
-                                        onChange={(e) => setSettingsData({ ...settingsData, username: e.target.value })}
-                                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 placeholder-gray-400"
-                                        placeholder="Leave blank to keep current"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm text-gray-600 mb-1">New Password (Optional)</label>
-                                    <input
-                                        type="password"
-                                        value={settingsData.password}
-                                        onChange={(e) => setSettingsData({ ...settingsData, password: e.target.value })}
-                                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 placeholder-gray-400"
-                                        placeholder="Leave blank to keep current"
-                                    />
-                                </div>
-                                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                    <p className="text-xs text-yellow-700">
-                                        Changing your credentials will log you out immediately.
-                                    </p>
-                                </div>
-                                <button type="submit" className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
-                                    Update Credentials
-                                </button>
-                            </form>
+            <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+                <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto w-[95vw]">
+                    <DialogHeader>
+                        <DialogTitle>Admin Settings</DialogTitle>
+                        <DialogDescription>Manage your account and system configurations.</DialogDescription>
+                    </DialogHeader>
 
-                            <div className="my-6 border-t border-gray-200" />
+                    <form onSubmit={handleUpdateSettings} className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="new-username">New Username (Optional)</Label>
+                            <Input
+                                id="new-username"
+                                type="text"
+                                value={settingsData.username}
+                                onChange={(e) => setSettingsData({ ...settingsData, username: e.target.value })}
+                                placeholder="Leave blank to keep current"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="new-password">New Password (Optional)</Label>
+                            <Input
+                                id="new-password"
+                                type="password"
+                                value={settingsData.password}
+                                onChange={(e) => setSettingsData({ ...settingsData, password: e.target.value })}
+                                placeholder="Leave blank to keep current"
+                            />
+                        </div>
+                        <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                            <p className="text-xs text-yellow-600">
+                                Changing your credentials will log you out immediately.
+                            </p>
+                        </div>
+                        <Button type="submit" className="w-full">
+                            Update Credentials
+                        </Button>
+                    </form>
 
-                            {/* System Settings Form */}
-                            <form onSubmit={handleSystemUpdate} className="space-y-4">
-                                <h4 className="text-sm font-semibold text-gray-900">System Configuration</h4>
-                                <div>
-                                    <label className="block text-xs text-gray-600 mb-1">Contact Support URL</label>
-                                    <input
-                                        type="text"
-                                        value={systemSettings.contactUrl}
-                                        onChange={(e) => setSystemSettings({ ...systemSettings, contactUrl: e.target.value })}
-                                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 placeholder-gray-400"
-                                        placeholder="https://example.com/support"
-                                    />
-                                    <p className="text-[10px] text-gray-500 mt-1">Used in the license expired overlay.</p>
-                                </div>
-                                <button type="submit" className="w-full py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors text-sm">
-                                    Save System Settings
-                                </button>
-                            </form>
+                    <Separator className="my-4" />
 
-                            <div className="mt-6 pt-6 border-t border-gray-200">
-                                <h4 className="text-sm font-medium text-gray-500 mb-4">Danger Zone</h4>
-                                <Link
-                                    href="/install"
-                                    className="w-full flex items-center justify-center px-4 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm"
-                                >
-                                    <Shield className="w-4 h-4 mr-2" />
-                                    Re-Install System (Reset Admin)
-                                </Link>
-                            </div>
-                        </motion.div>
+                    {/* System Settings Form */}
+                    <form onSubmit={handleSystemUpdate} className="space-y-4">
+                        <h4 className="text-sm font-semibold text-foreground">System Configuration</h4>
+                        <div className="space-y-2">
+                            <Label htmlFor="contact-url">Contact Support URL</Label>
+                            <Input
+                                id="contact-url"
+                                type="text"
+                                value={systemSettings.contactUrl}
+                                onChange={(e) => setSystemSettings({ ...systemSettings, contactUrl: e.target.value })}
+                                placeholder="https://example.com/support"
+                            />
+                            <p className="text-[10px] text-muted-foreground">Used in the license expired overlay.</p>
+                        </div>
+                        <Button type="submit" variant="secondary" className="w-full text-green-700 bg-green-100 hover:bg-green-200 border-green-200">
+                            Save System Settings
+                        </Button>
+                    </form>
+
+                    <div className="mt-4 pt-4 border-t">
+                        <h4 className="text-sm font-medium text-muted-foreground mb-4">Danger Zone</h4>
+                        <Button variant="outline" className="w-full border-destructive/50 text-destructive hover:bg-destructive/10" asChild>
+                            <Link href="/install">
+                                <Shield className="w-4 h-4 mr-2" />
+                                Re-Install System (Reset Admin)
+                            </Link>
+                        </Button>
                     </div>
-                )}
-            </AnimatePresence>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
