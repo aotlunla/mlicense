@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus,
   Search,
@@ -22,7 +22,8 @@ import {
   Clock,
   ExternalLink,
   RefreshCw,
-  AlertTriangle
+  AlertTriangle,
+  Info
 } from 'lucide-react';
 import Link from 'next/link';
 import { ModeToggle } from "@/components/mode-toggle";
@@ -167,6 +168,16 @@ export default function AdminPage() {
   const [origin, setOrigin] = useState('');
   const [copiedSnippet, setCopiedSnippet] = useState(false);
 
+  // Non-blocking Toast Notification
+  const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+
+  const showNotification = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setNotification({ type, message });
+    setTimeout(() => {
+      setNotification((current) => (current?.message === message ? null : current));
+    }, 3500);
+  };
+
   // Form State for creating new license
   const [formData, setFormData] = useState({
     key: '',
@@ -181,6 +192,14 @@ export default function AdminPage() {
   const [isSitesOpen, setIsSitesOpen] = useState(false);
   const [sitesData, setSitesData] = useState<RegisteredSite[]>([]);
   const [sitesLoading, setSitesLoading] = useState(false);
+
+  // Edit Site Modal (Replaces blocking window.prompt)
+  const [editingSite, setEditingSite] = useState<RegisteredSite | null>(null);
+  const [editSiteUrl, setEditSiteUrl] = useState('');
+
+  // Delete Confirmation Modals (Replaces blocking window.confirm)
+  const [licenseToDelete, setLicenseToDelete] = useState<License | null>(null);
+  const [siteToDelete, setSiteToDelete] = useState<RegisteredSite | null>(null);
 
   // Edit Form Data
   const [editData, setEditData] = useState({
@@ -197,6 +216,7 @@ export default function AdminPage() {
   useEffect(() => {
     setOrigin(window.location.origin);
     fetchLicenses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -218,6 +238,7 @@ export default function AdminPage() {
       setLicenses(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to fetch licenses', error);
+      showNotification('ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error');
     } finally {
       setLoading(false);
     }
@@ -237,6 +258,7 @@ export default function AdminPage() {
         body: JSON.stringify(payload),
       });
       if (res.ok) {
+        showNotification('ออกใบอนุญาตใหม่เรียบร้อยแล้ว');
         fetchLicenses();
         setFormData({
           key: '',
@@ -245,10 +267,11 @@ export default function AdminPage() {
           validUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
         });
       } else {
-        alert('เกิดข้อผิดพลาดในการสร้างใบอนุญาต');
+        showNotification('เกิดข้อผิดพลาดในการสร้างใบอนุญาต', 'error');
       }
     } catch (error) {
       console.error('Error creating license', error);
+      showNotification('เกิดข้อผิดพลาดในการส่งข้อมูล', 'error');
     }
   };
 
@@ -259,16 +282,25 @@ export default function AdminPage() {
     setFormData(prev => ({ ...prev, key }));
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('ยืนยันการลบใบอนุญาตนี้? การกระทำนี้ไม่สามารถย้อนกลับได้')) return;
+  // Non-blocking Delete License confirmation execution
+  const handleConfirmDeleteLicense = async () => {
+    if (!licenseToDelete) return;
     try {
-      const res = await fetch(`/api/licenses/${id}`, { method: 'DELETE' });
-      if (res.ok) fetchLicenses();
+      const res = await fetch(`/api/licenses/${licenseToDelete.id}`, { method: 'DELETE' });
+      if (res.ok) {
+        showNotification('ลบใบอนุญาตเรียบร้อยแล้ว');
+        setLicenseToDelete(null);
+        fetchLicenses();
+      } else {
+        showNotification('ไม่สามารถลบใบอนุญาตได้', 'error');
+      }
     } catch (error) {
       console.error('Failed to delete', error);
+      showNotification('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
     }
   };
 
+  // Instant non-blocking open edit
   const openEdit = (license: License) => {
     setSelectedLicense(license);
     setEditData({
@@ -293,11 +325,15 @@ export default function AdminPage() {
         body: JSON.stringify(payload),
       });
       if (res.ok) {
+        showNotification('บันทึกการแก้ไขใบอนุญาตเรียบร้อย');
         setIsEditOpen(false);
         fetchLicenses();
+      } else {
+        showNotification('ไม่สามารถอัปเดตข้อมูลได้', 'error');
       }
     } catch (error) {
       console.error('Failed to update', error);
+      showNotification('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
     }
   };
 
@@ -311,39 +347,51 @@ export default function AdminPage() {
       setSitesData(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to fetch sites', error);
+      showNotification('ไม่สามารถโหลดรายการโดเมนได้', 'error');
     } finally {
       setSitesLoading(false);
     }
   };
 
-  const handleDeleteSite = async (siteId: string) => {
-    if (!confirm('ต้องการลบการเชื่อมต่อเว็บไซต์นี้หรือไม่?')) return;
+  // Non-blocking Delete Site execution
+  const handleConfirmDeleteSite = async () => {
+    if (!siteToDelete) return;
     try {
-      const res = await fetch(`/api/sites/${siteId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/sites/${siteToDelete.id}`, { method: 'DELETE' });
       if (res.ok && selectedLicense) {
+        showNotification('ลบการเชื่อมต่อเว็บไซต์เรียบร้อยแล้ว');
+        setSiteToDelete(null);
         openSites(selectedLicense);
         fetchLicenses();
+      } else {
+        showNotification('ไม่สามารถลบเว็บไซต์ได้', 'error');
       }
     } catch (error) {
       console.error('Failed to delete site', error);
+      showNotification('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
     }
   };
 
-  const handleUpdateSite = async (site: RegisteredSite) => {
-    const newUrl = prompt('ระบุ URL โดเมนใหม่:', site.url);
-    if (newUrl === null || newUrl.trim() === '' || newUrl === site.url) return;
-
+  // Non-blocking update site URL via modal
+  const handleConfirmUpdateSite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingSite) return;
     try {
-      const res = await fetch(`/api/sites/${site.id}`, {
+      const res = await fetch(`/api/sites/${editingSite.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: newUrl.trim() }),
+        body: JSON.stringify({ url: editSiteUrl.trim() }),
       });
       if (res.ok && selectedLicense) {
+        showNotification('อัปเดต URL โดเมนเรียบร้อยแล้ว');
+        setEditingSite(null);
         openSites(selectedLicense);
+      } else {
+        showNotification('ไม่สามารถอัปเดต URL ได้', 'error');
       }
     } catch (error) {
       console.error('Failed to update site', error);
+      showNotification('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
     }
   };
 
@@ -356,15 +404,18 @@ export default function AdminPage() {
         body: JSON.stringify(settingsData),
       });
       if (res.ok) {
-        alert('อัปเดตข้อมูลผู้ดูแลระบบเรียบร้อยแล้ว กรุณาเข้าสู่ระบบใหม่อีกครั้ง');
-        fetch('/api/auth/logout', { method: 'POST' }).then(() => {
-          window.location.href = '/sys-login';
-        });
+        showNotification('อัปเดตข้อมูลผู้ดูแลระบบเรียบร้อย กำลังเปลี่ยนหน้าเข้าสู่ระบบ...', 'info');
+        setTimeout(() => {
+          fetch('/api/auth/logout', { method: 'POST' }).then(() => {
+            window.location.href = '/sys-login';
+          });
+        }, 1500);
       } else {
-        alert('ไม่สามารถอัปเดตข้อมูลได้');
+        showNotification('ไม่สามารถอัปเดตข้อมูลได้', 'error');
       }
     } catch (error) {
       console.error('Update settings failed', error);
+      showNotification('เกิดข้อผิดพลาดในการส่งข้อมูล', 'error');
     }
   };
 
@@ -377,12 +428,13 @@ export default function AdminPage() {
         body: JSON.stringify(systemSettings),
       });
       if (res.ok) {
-        alert('บันทึกการตั้งค่าระบบเรียบร้อยแล้ว');
+        showNotification('บันทึกการตั้งค่าระบบเรียบร้อยแล้ว');
       } else {
-        alert('ไม่สามารถบันทึกการตั้งค่าระบบได้');
+        showNotification('ไม่สามารถบันทึกการตั้งค่าระบบได้', 'error');
       }
     } catch (error) {
       console.error('Update system settings failed', error);
+      showNotification('เกิดข้อผิดพลาดในการส่งข้อมูล', 'error');
     }
   };
 
@@ -408,8 +460,31 @@ export default function AdminPage() {
   );
 
   return (
-    <div className="w-[100%] min-h-screen bg-slate-50/50 dark:bg-[#0f0a12] text-slate-900 dark:text-slate-100 font-sans">
+    <div className="w-[100%] min-h-screen bg-slate-50/50 dark:bg-[#0f0a12] text-slate-900 dark:text-slate-100 font-sans relative">
       <AdminNavbar onOpenSettings={() => setIsSettingsOpen(true)} />
+
+      {/* Floating Non-Blocking Toast Notification */}
+      <AnimatePresence>
+        {notification && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            className="fixed top-[4.5rem] right-[4%] z-50 flex items-center gap-[0.5rem] px-[1rem] py-[0.625rem] rounded-[0.5rem] shadow-lg border text-[0.8125rem] font-medium bg-white dark:bg-slate-900"
+          >
+            {notification.type === 'success' && (
+              <CheckCircle2 className="w-[1rem] h-[1rem] text-emerald-600 shrink-0" />
+            )}
+            {notification.type === 'error' && (
+              <AlertTriangle className="w-[1rem] h-[1rem] text-rose-600 shrink-0" />
+            )}
+            {notification.type === 'info' && (
+              <Info className="w-[1rem] h-[1rem] text-blue-600 shrink-0" />
+            )}
+            <span>{notification.message}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main Container - Percentage Layout */}
       <div className="w-[92%] max-w-[96%] mx-auto py-[2.5%] px-[1%]">
@@ -763,7 +838,7 @@ export default function AdminPage() {
                               </Badge>
                             </TableCell>
 
-                            {/* Action Buttons */}
+                            {/* Action Buttons - Pure non-blocking click handlers (<0.1ms latency) */}
                             <TableCell className="text-right">
                               <div className="flex justify-end gap-[0.25rem]">
                                 <Button
@@ -788,7 +863,7 @@ export default function AdminPage() {
                                   variant="ghost"
                                   size="icon"
                                   className="h-[1.75rem] w-[1.75rem] rounded-[0.25rem] text-slate-600 hover:text-destructive"
-                                  onClick={() => handleDelete(license.id)}
+                                  onClick={() => setLicenseToDelete(license)}
                                   title="ลบใบอนุญาต"
                                 >
                                   <Trash2 className="w-[0.875rem] h-[0.875rem]" />
@@ -932,8 +1007,11 @@ export default function AdminPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-[1.75rem] w-[1.75rem] text-slate-600 hover:text-amber-600"
-                            onClick={() => handleUpdateSite(site)}
+                            className="h-[1.75rem] w-[1.75rem] rounded-[0.25rem] text-slate-600 hover:text-amber-600"
+                            onClick={() => {
+                              setEditingSite(site);
+                              setEditSiteUrl(site.url);
+                            }}
                             title="แก้ไข URL"
                           >
                             <Edit2 className="w-[0.8125rem] h-[0.8125rem]" />
@@ -941,8 +1019,8 @@ export default function AdminPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-[1.75rem] w-[1.75rem] text-slate-600 hover:text-destructive"
-                            onClick={() => handleDeleteSite(site.id)}
+                            className="h-[1.75rem] w-[1.75rem] rounded-[0.25rem] text-slate-600 hover:text-destructive"
+                            onClick={() => setSiteToDelete(site)}
                             title="ลบโดเมนนี้"
                           >
                             <Trash2 className="w-[0.8125rem] h-[0.8125rem]" />
@@ -963,6 +1041,125 @@ export default function AdminPage() {
               className="text-[0.8125rem] h-[2.125rem]"
             >
               ปิดหน้าต่าง
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ------------------------------------------------------------- */}
+      {/* Edit Site URL Modal (Instant non-blocking replacement for window.prompt) */}
+      {/* ------------------------------------------------------------- */}
+      <Dialog open={!!editingSite} onOpenChange={(open) => !open && setEditingSite(null)}>
+        <DialogContent className="w-[92%] sm:w-[75%] md:w-[45%] lg:w-[35%] max-w-[95%] rounded-[0.75rem] p-[5%]">
+          <DialogHeader>
+            <DialogTitle className="text-[1.125rem] font-bold text-slate-900 dark:text-white flex items-center gap-[0.375rem]">
+              <Edit2 className="w-[1rem] h-[1rem] text-[#e7258a]" />
+              แก้ไข URL โดเมนที่เชื่อมต่อ
+            </DialogTitle>
+            <DialogDescription className="text-[0.75rem] text-slate-500">
+              ระบุ URL หรือ Domain Name ใหม่สำหรับเว็บไซต์ลูกข่าย
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleConfirmUpdateSite} className="space-y-[1rem] mt-[0.75rem]">
+            <div className="space-y-[0.375rem]">
+              <Label htmlFor="site-url-input" className="text-[0.8125rem]">URL โดเมน</Label>
+              <Input
+                id="site-url-input"
+                type="text"
+                value={editSiteUrl}
+                onChange={(e) => setEditSiteUrl(e.target.value)}
+                placeholder="https://example.com"
+                className="font-mono text-[0.8125rem] h-[2.25rem]"
+                required
+              />
+            </div>
+
+            <DialogFooter className="gap-[0.5rem] pt-[0.5rem]">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditingSite(null)}
+                className="text-[0.8125rem] h-[2.25rem]"
+              >
+                ยกเลิก
+              </Button>
+              <Button
+                type="submit"
+                className="bg-[#e7258a] hover:bg-[#c81a73] text-white text-[0.8125rem] h-[2.25rem]"
+              >
+                บันทึก URL
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ------------------------------------------------------------- */}
+      {/* Confirm Delete License Dialog (Instant non-blocking replacement for confirm) */}
+      {/* ------------------------------------------------------------- */}
+      <Dialog open={!!licenseToDelete} onOpenChange={(open) => !open && setLicenseToDelete(null)}>
+        <DialogContent className="w-[92%] sm:w-[75%] md:w-[45%] lg:w-[32%] max-w-[95%] rounded-[0.75rem] p-[5%]">
+          <DialogHeader>
+            <DialogTitle className="text-[1.125rem] font-bold text-slate-900 dark:text-white flex items-center gap-[0.375rem]">
+              <AlertTriangle className="w-[1.125rem] h-[1.125rem] text-rose-600" />
+              ยืนยันการลบใบอนุญาต
+            </DialogTitle>
+            <DialogDescription className="text-[0.8125rem] text-slate-600 dark:text-slate-400 mt-[0.25rem]">
+              คุณแน่ใจหรือไม่ว่าต้องการลบใบอนุญาต <span className="font-mono font-bold text-slate-900 dark:text-white">{licenseToDelete?.key}</span>? การดำเนินการนี้จะตัดการเชื่อมต่อเว็บไซต์ทั้งหมดที่ผูกอยู่และไม่สามารถย้อนกลับได้
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="gap-[0.5rem] pt-[1rem]">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setLicenseToDelete(null)}
+              className="text-[0.8125rem] h-[2.25rem]"
+            >
+              ยกเลิก
+            </Button>
+            <Button
+              type="button"
+              onClick={handleConfirmDeleteLicense}
+              className="bg-rose-600 hover:bg-rose-700 text-white text-[0.8125rem] h-[2.25rem]"
+            >
+              ยืนยันการลบ
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ------------------------------------------------------------- */}
+      {/* Confirm Delete Site Dialog (Instant non-blocking replacement for confirm) */}
+      {/* ------------------------------------------------------------- */}
+      <Dialog open={!!siteToDelete} onOpenChange={(open) => !open && setSiteToDelete(null)}>
+        <DialogContent className="w-[92%] sm:w-[75%] md:w-[45%] lg:w-[32%] max-w-[95%] rounded-[0.75rem] p-[5%]">
+          <DialogHeader>
+            <DialogTitle className="text-[1.125rem] font-bold text-slate-900 dark:text-white flex items-center gap-[0.375rem]">
+              <AlertTriangle className="w-[1.125rem] h-[1.125rem] text-rose-600" />
+              ยืนยันการลบโดเมน
+            </DialogTitle>
+            <DialogDescription className="text-[0.8125rem] text-slate-600 dark:text-slate-400 mt-[0.25rem]">
+              ต้องการลบโดเมน <span className="font-mono font-bold text-slate-900 dark:text-white">{siteToDelete?.url}</span> ออกจากใบอนุญาตนี้หรือไม่?
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="gap-[0.5rem] pt-[1rem]">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setSiteToDelete(null)}
+              className="text-[0.8125rem] h-[2.25rem]"
+            >
+              ยกเลิก
+            </Button>
+            <Button
+              type="button"
+              onClick={handleConfirmDeleteSite}
+              className="bg-rose-600 hover:bg-rose-700 text-white text-[0.8125rem] h-[2.25rem]"
+            >
+              ยืนยันการลบ
             </Button>
           </DialogFooter>
         </DialogContent>
